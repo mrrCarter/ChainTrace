@@ -22,10 +22,10 @@ We welcome contributions! Please read our contribution guidelines for details on
 [Specify the license under which the project is released]
 
 ## Team
-- Carter: Project Lead, Python Development
-- Anna: Database and Integration
-- Leo: FPGA Development and Integration
-- Kursat: Advanced FPGA Logic and Pattern Recognition
+- Carter: carther@bu.edu
+- Anna: afinn12@bu.edu
+- Leo: leophung@bu.edu
+- Kursat: kalyamac@bu.edu
 
 ## Acknowledgements
 [Optional section to acknowledge any support or contributions from people or organizations]
