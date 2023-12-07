@@ -6,6 +6,7 @@ import concurrent.futures
 import time
 from config import API_KEY
 
+
 # Etherscan API Key and URL
 ETHERSCAN_API_KEY = API_KEY
 ETHERSCAN_API_URL = "http://api.etherscan.io/api"
@@ -221,3 +222,19 @@ if __name__ == "__main__":
 # # Main execution
 # if __name__ == "__main__":
 #     main()
+
+import serial
+import time
+
+def send_file_via_uart(serial_port, file_path, baud_rate=115200):
+    # Open the serial port
+    with serial.Serial(serial_port, baud_rate) as ser:
+        # Open the binary file
+        with open(file_path, 'rb') as file:
+            # Read the file and send it over UART
+            while True:
+                chunk = file.read(1024)  # Read in chunks of 1024 bytes
+                if not chunk:
+                    break  # End of file
+                ser.write(chunk)
+                time.sleep(0.1)  # Slight delay to ensure data integrity
