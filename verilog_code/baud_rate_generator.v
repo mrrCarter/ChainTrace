@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module baud_rate_generator
     #(              // 9600 baud
         parameter   N = 10,     // number of counter bits
