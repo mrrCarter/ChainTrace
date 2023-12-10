@@ -3,6 +3,8 @@
 ## Overview
 ChainTrace is an innovative tool designed for real-time analysis of blockchain transactions. Utilizing FPGA's computational capabilities, it aims to trace transactions, identify suspicious patterns, and flag potential endpoints in cryptocurrency networks.
 
+Here is a link to our demo video: 
+
 ## Features
 - Real-time data ingestion from blockchain APIs
 - Advanced transaction tracing using FPGA
@@ -15,18 +17,12 @@ ChainTrace is an innovative tool designed for real-time analysis of blockchain t
 ## Usage
 [Instructions on how to use the tool, including any commands or scripts]
 
-## Contributing
-We welcome contributions! Please read our contribution guidelines for details on how to contribute to ChainTrace.
-
-## License
-[Specify the license under which the project is released]
+## Code
+[Code explanation here]
 
 ## Team
 - Carter: carther@bu.edu
 - Anna: afinn12@bu.edu
 - Leo: leophung@bu.edu
 - Kursat: kalyamac@bu.edu
-
-## Acknowledgements
-[Optional section to acknowledge any support or contributions from people or organizations]
 
