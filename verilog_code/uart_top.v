@@ -64,7 +64,7 @@ module uart_top
          )
          FIFO_RX_UNIT
          (
-            .clk_100MHz(clk_100MHz),
+            .clk_100Mhz(clk_100MHz),
             .reset(reset),
             .write_to_fifo(rx_done_tick),
 	        .read_from_fifo(rx_full),
@@ -73,6 +73,8 @@ module uart_top
 	        .empty(rx_empty),
 	        .full(rx_full)            
 	      );
+	   
+	wire tx_read_fifo;   
 	   
     larger_fifo
         #(
@@ -84,12 +86,14 @@ module uart_top
             .clk_100MHz(clk_100MHz),
             .reset(reset),
 		    .write_to_fifo(read_uart),    //load the 64 bits when button pressed
-	        .read_from_fifo(tx_done),    //whenever not transmitting, send to transmitter
+	        .read_from_fifo(tx_read_fifo),    //whenever not transmitting, send to transmitter
 	        .write_data_in(write_data),   //put 64 bits in memory
 	        .read_data_out(tx_fifo_out),  //ascii to output
 	        .empty(tx_empty)  //output for display
 	      );
 	      
+        assign tx_read_fifo = tx_done_tick;	 
+             
     uart_transmitter
         #(
             .DBITS(DBITS),
