@@ -13,7 +13,7 @@ module uart_test(
     
     // Connection Signals
     wire rx_full, rx_empty, btn_tick;
-    wire [7:0] rec_data, rec_data1;
+    wire [63:0] rec_data, rec_data1;
     
     // Complete UART Core
     uart_top UART_UNIT
@@ -21,7 +21,6 @@ module uart_test(
             .clk_100MHz(clk_100MHz),
             .reset(reset),
             .read_uart(btn_tick),
-            .write_uart(btn_tick),
             .rx(rx),
             .write_data(rec_data1),
             .rx_full(rx_full),
@@ -45,6 +44,6 @@ module uart_test(
     
     // Output Logic
     assign LED = rec_data;              // data byte received displayed on LEDs
-    assign an = 4'b1110;                // using only one 7 segment digit 
+    assign an = 8'b1110;                // using only one 7 segment digit 
     assign seg = {~rx_full, 2'b11, ~rx_empty, 3'b111};
 endmodule

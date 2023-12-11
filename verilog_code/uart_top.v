@@ -6,19 +6,18 @@ module uart_top
                     SB_TICK = 16,       // number of stop bit / oversampling ticks
                     BR_LIMIT = 651,     // baud rate generator counter limit
                     BR_BITS = 10,       // number of baud rate generator counter bits
-                    FIFO_EXP = 2        // exponent for number of FIFO addresses (2^2 = 4)
+                    FIFO_EXP = 3        // exponent for number of FIFO addresses (2^2 = 4)
     )
     (
         input clk_100MHz,               // FPGA clock
         input reset,                    // reset
         input read_uart,                // button
-        input write_uart,               // button
         input rx,                       // serial data in
-        input [DBITS-1:0] write_data,   // data from Tx FIFO
+        input [DBITS*(2**FIFO_EXP)-1:0] write_data, // data from Tx FIFO
         output rx_full,                 // do not write data to FIFO
         output rx_empty,                // no data to read from FIFO
         output tx,                      // serial data out
-        output [DBITS-1:0] read_data    // data to Rx FIFO
+        output [DBITS*(2**FIFO_EXP)-1:0] read_data   // data to Rx FIFO
     );
     
     // Connection Signals
@@ -58,6 +57,39 @@ module uart_top
             .data_out(rx_data_out)
          );
     
+    fifo
+        #(
+            .DATA_SIZE(DBITS),
+            .ADDR_SPACE_EXP(FIFO_EXP)
+         )
+         FIFO_RX_UNIT
+         (
+            .clk(clk_100MHz),
+            .reset(reset),
+            .write_to_fifo(rx_done_tick),
+	        .read_from_fifo(rx_full),
+	        .write_data_in(rx_data_out),
+	        .read_data_out(read_data),
+	        .empty(rx_empty),
+	        .full(rx_full)            
+	      );
+	   
+    larger_fifo
+        #(
+            .DATA_SIZE(DBITS),
+            .ADDR_SPACE_EXP(FIFO_EXP)
+         )
+         FIFO_TX_UNIT
+         (
+            .clk_100MHz(clk_100MHz),
+            .reset(reset),
+		    .write_to_fifo(read_uart),    //load the 64 bits when button pressed
+	        .read_from_fifo(tx_done),    //whenever not transmitting, send to transmitter
+	        .write_data_in(write_data),   //put 64 bits in memory
+	        .read_data_out(tx_fifo_out),  //ascii to output
+	        .empty(tx_empty)  //output for display
+	      );
+	      
     uart_transmitter
         #(
             .DBITS(DBITS),
@@ -74,39 +106,6 @@ module uart_top
             .tx(tx)
          );
     
-    fifo
-        #(
-            .DATA_SIZE(DBITS),
-            .ADDR_SPACE_EXP(FIFO_EXP)
-         )
-         FIFO_RX_UNIT
-         (
-            .clk(clk_100MHz),
-            .reset(reset),
-            .write_to_fifo(rx_done_tick),
-	        .read_from_fifo(read_uart),
-	        .write_data_in(rx_data_out),
-	        .read_data_out(read_data),
-	        .empty(rx_empty),
-	        .full(rx_full)            
-	      );
-	   
-    fifo
-        #(
-            .DATA_SIZE(DBITS),
-            .ADDR_SPACE_EXP(FIFO_EXP)
-         )
-         FIFO_TX_UNIT
-         (
-            .clk(clk_100MHz),
-            .reset(reset),
-            .write_to_fifo(write_uart),
-	        .read_from_fifo(tx_done_tick),
-	        .write_data_in(write_data),
-	        .read_data_out(tx_fifo_out),
-	        .empty(tx_empty),
-	        .full()                // intentionally disconnected
-	      );
     
     // Signal Logic
     assign tx_fifo_not_empty = ~tx_empty;
