@@ -21,7 +21,64 @@ output reg [6:0] confidence_score
    reg [9:0] start_time, end_time;
    reg [6:0] total_running_sum;
 
-   reg [6:0] inoutratio; 
+
+   reg [6:0] m, i, v, p;
+
+
+
+   
+parameter standard_method = 2'b00, tether = 2'b01, monero = 2'b10, other_method = 2'b11;
+
+
+//initialize
+initial begin
+    moving_method = 0;
+    method_indicator=0;
+    total_running_sum =0;
+    moving_in=0;
+end
+
+
+//method
+always @(posedge clk) begin
+    case (method_field)
+    tether: begin
+        method_indicator <= 1;
+    end
+    monero: begin
+        method_indicator <= 1;
+    end
+    other_method: begin
+        moving_method <= moving_method+1;
+    end
+end
+
+
+//in/out ratio
+always @(posedge clk) begin
+    case (in)
+    0: begin
+        moving_in<=moving_in+1;
+    end
+end
+
+
+ //value
+  // value threshold each degree
+    reg [13:0]value_degree1 = 14'b10011100010000;
+    reg [15:0]value_degree2 = 16'b1100001101010000;
+    reg [16:0]value_degree3 = 17'b11000011010100000;
+    reg [17:0]value_degree4 = 18'b110000110101000000;
+    reg [18:0]value_degree5 = 19'b1100001101010000000;
+    reg [2:0] value_indicator;
+
+always @(posedge clk) begin
+    moving_avg_value <= moving_avg_value + value;
+    end
+
+
+
+
 //period and calculate confidence score
 always @(posedge clk) begin
     if (new_wallet == 1){
