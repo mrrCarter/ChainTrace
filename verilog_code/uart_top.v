@@ -64,7 +64,7 @@ module uart_top
          )
          FIFO_RX_UNIT
          (
-            .clk(clk_100MHz),
+            .clk_100MHz(clk_100MHz),
             .reset(reset),
             .write_to_fifo(rx_done_tick),
 	        .read_from_fifo(rx_full),
