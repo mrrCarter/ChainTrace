@@ -1,4 +1,26 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company:
+// Engineer:
+//
+// Create Date: 12/11/2023 08:44:13 PM
+// Design Name:
+// Module Name: transactiontracing
+// Project Name:
+// Target Devices:
+// Tool Versions:
+// Description:
+//
+// Dependencies:
+//
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+
+`timescale 1ns / 1ps
 
 module transactiontracing #(parameter n =1)(
 input  clk,
@@ -6,7 +28,7 @@ input [9:0] time_stamp,
 input in,
 input [1:0]method_field,
 input [29:0]value,
-input new_wallet;
+input new_wallet,
 output reg [6:0] confidence_score
     );
    
@@ -51,6 +73,7 @@ always @(posedge clk) begin
     other_method: begin
         moving_method <= moving_method+1;
     end
+    endcase
 end
 
 
@@ -60,6 +83,7 @@ always @(posedge clk) begin
     0: begin
         moving_in<=moving_in+1;
     end
+    endcase
 end
 
 
@@ -81,85 +105,78 @@ always @(posedge clk) begin
 
 //period and calculate confidence score
 always @(posedge clk) begin
-    if (new_wallet == 1){
-        //what if it's the first transaction?
-        //divison math is different
-        //decimal math is different
-
-
-        if(method_indicator == 1 || 100*(moving_method/total_running_sum) >= 15){
+    if (new_wallet == 1)
+        begin
+        if(method_indicator == 1 || 100*(moving_method/total_running_sum) >= 15)
             m <= 15;
-        }else if (100*(moving_method/total_running_sum) >= 10){
+        else if (100*(moving_method/total_running_sum) >= 10)
             m <= 10;
-        }else if (100*(moving_method/total_running_sum) >= 5){
+        else if (100*(moving_method/total_running_sum) >= 5)
             m <= 5;
-        }else{
+        else
             m<=0;
-        }
+       
+       
 
 
 
-        if(100*(moving_in/total_running_sum) >= 95 || 100*(moving_in/total_running_sum) <= 5 ){
+        if(100*(moving_in/total_running_sum) >= 95 || 100*(moving_in/total_running_sum) <= 5 )
             i <= 35;
-        }else if (100*(moving_in/total_running_sum) >= 90 || 100*(moving_in/total_running_sum) <= 10){
+        else if (100*(moving_in/total_running_sum) >= 90 || 100*(moving_in/total_running_sum) <= 10)
             i <= 30;
-        }else if (100*(moving_in/total_running_sum) >= 85|| 100*(moving_in/total_running_sum) <= 15 ){
+        else if (100*(moving_in/total_running_sum) >= 85|| 100*(moving_in/total_running_sum) <= 15 )
             i <= 25;
-        }else if (100*(moving_in/total_running_sum) >= 80 || 100*(moving_in/total_running_sum) <= 20 ){
+        else if (100*(moving_in/total_running_sum) >= 80 || 100*(moving_in/total_running_sum) <= 20 )
             i <= 20;
-        }else if (100*(moving_in/total_running_sum) >= 75 || 100*(moving_in/total_running_sum) <= 25 ){
+        else if (100*(moving_in/total_running_sum) >= 75 || 100*(moving_in/total_running_sum) <= 25 )
             i <= 15;
-        }else if (100*(moving_in/total_running_sum) >= 70 || 100*(moving_in/total_running_sum) <= 30){
+        else if (100*(moving_in/total_running_sum) >= 70 || 100*(moving_in/total_running_sum) <= 30)
             i <= 10;
-        }else{
-            m<=0;
-        }
+        else
+            i<=0;
+       
 
 
-        if(moving_avg_value/total_running_sum >= value_degree5){
+        if(moving_avg_value/total_running_sum >= value_degree5)
             v <= 20;
-        }else if (moving_avg_value/total_running_sum >= value_degree4){
+        else if (moving_avg_value/total_running_sum >= value_degree4)
             v <= 17;
-        }else if (moving_avg_value/total_running_sum >= value_degree3){
+        else if (moving_avg_value/total_running_sum >= value_degree3)
             v <= 14;
-        }else if (moving_avg_value/total_running_sum >= value_degree2){
+        else if (moving_avg_value/total_running_sum >= value_degree2)
             v <= 10;
-        }else if (moving_avg_value/total_running_sum >= value_degree1){
+        else if (moving_avg_value/total_running_sum >= value_degree1)
             v <= 7;
-        }else{
+        else
             v <=0;
-        }
+       
 
-        if((start_time-end_time)/total_running_sum >= 3600){
+        if((start_time-end_time)/total_running_sum >= 3600)
             p <= 30;
-        }else if ((start_time-end_time)/total_running_sum >= 1800){
+        else if ((start_time-end_time)/total_running_sum >= 1800)
             p <= 25;
-        }else if ((start_time-end_time)/total_running_sum >= 720){
+        else if ((start_time-end_time)/total_running_sum >= 720)
             p <= 20;
-        }else if ((start_time-end_time)/total_running_sum >= 60){
+        else if ((start_time-end_time)/total_running_sum >= 60)
             p <= 15;
-        }else if ((start_time-end_time)/total_running_sum >= 1){
+        else if ((start_time-end_time)/total_running_sum >= 1)
             p <= 5;
-        }else{
+        else
             p <=0;
-        }
-
-
-
-    
-    }else{
+        end
+    else begin
         end_time <= time_stamp;
-    }
+    end
     total_running_sum <= total_running_sum +1;
     end
 
-   always @(m)begin 
+   always @(m)begin
      method_indicator <= 0;
    end
-   always @(p)begin 
+   always @(p)begin
      start_time <=time_stamp;
    end
-   always @(m, v, i , p)begin 
+   always @(m, v, i , p) begin
     confidence_score <= m+i+v+p;
    end
      
