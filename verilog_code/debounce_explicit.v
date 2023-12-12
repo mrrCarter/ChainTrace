@@ -1,50 +1,92 @@
 `timescale 1ns / 1ps
 
-module uart_test(
-    input clk_100MHz,       // basys 3 FPGA clock signal
-    input reset,            // btnR    
-    input rx,               // USB-RS232 Rx
-    input btn,              // btnL (read and write FIFO operation)
-    output tx,              // USB-RS232 Tx
-    output [3:0] an,        // 7 segment display digits
-    output [0:6] seg,       // 7 segment display segments
-    output [7:0] LED        // data byte display
+module debounce_explicit(
+    input clk_100MHz,
+    input reset,
+    input btn,              // button input
+    output reg db_level,    // for switches
+    output reg db_tick      // for buttons
     );
     
-    // Connection Signals
-    wire rx_full, rx_empty, btn_tick;
-    wire [7:0] rec_data, rec_data1;
+    // state declarations
+    parameter [1:0] zero  = 2'b00,
+                    wait0 = 2'b01,
+                    one   = 2'b10,
+                    wait1 = 2'b11;
     
-    // Complete UART Core
-    uart_top UART_UNIT
-        (
-            .clk_100MHz(clk_100MHz),
-            .reset(reset),
-            .read_uart(btn_tick),
-            .write_uart(btn_tick),
-            .rx(rx),
-            .write_data(rec_data1),
-            .rx_full(rx_full),
-            .rx_empty(rx_empty),
-            .read_data(rec_data),
-            .tx(tx)
-        );
+    // Artix-7 has a 100MHz clk with a period of 10ns    
+    // number of counter bits (2^N * 10ns = ~40ms)
+    parameter N = 22;
     
-    // Button Debouncer
-    debounce_explicit BUTTON_DEBOUNCER
-        (
-            .clk_100MHz(clk_100MHz),
-            .reset(reset),
-            .btn(btn),         
-            .db_level(),  
-            .db_tick(btn_tick)
-        );
+    // signal declaration
+    reg [1:0] state_reg, next_state;
+    reg [N-1:0] q_reg;
+    wire [N-1:0] q_next;
+    wire q_zero;
+    reg q_load, q_dec;
     
-    // Signal Logic    
-    assign rec_data1 = rec_data + 1;    // add 1 to ascii value of received data (to transmit)
+    // body
+    // FSMD state and data registers
+    always @(posedge clk_100MHz or posedge reset) 
+        if(reset) begin
+            state_reg <= zero;
+            q_reg <= 0;
+        end
+        else begin
+            state_reg <= next_state;
+            q_reg <= q_next;
+        end
+        
+    // FSMD data path (counter) next state logic
+    assign q_next = (q_load) ? {N{1'b1}} :      // load all 1s
+                    (q_dec) ? q_reg - 1  :      // decrement
+                     q_reg;                     // no change in q
     
-    // Output Logic
-    assign LED = rec_data;              // data byte received displayed on LEDs
-    assign an = 4'b1110;                // using only one 7 segment digit 
-    assign seg = {~rx_full, 2'b11, ~rx_empty, 3'b111};
+    // status signal
+    assign q_zero = (q_next == 0);
+    
+    // FSMD control path next state logic
+    always @* begin
+        next_state = state_reg;
+        q_load = 1'b0;
+        q_dec = 1'b0;
+        db_tick = 1'b0;
+        
+        case(state_reg)
+            zero    : begin
+                        db_level = 1'b0;
+                        if(btn) begin
+                            next_state = wait1;
+                            q_load = 1'b1;
+                        end
+            end
+            
+            wait1   : begin
+                        db_level = 1'b0;
+                        if(btn) begin
+                            q_dec = 1'b1;
+                            if(q_zero) begin
+                                next_state = one;
+                                db_tick = 1'b1;
+                            end
+                        end
+                        else
+                            next_state = zero;
+            end
+            
+            one     : begin
+                        db_level = 1'b1;
+                        if(~btn) begin
+                            q_dec = 1'b1;
+                            if(q_zero)
+                                next_state = zero;
+                        end
+                        else
+                            next_state = one;
+            end
+            
+            default : next_state = zero;
+        endcase
+    end
+        
 endmodule
