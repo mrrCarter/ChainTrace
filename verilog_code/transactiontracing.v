@@ -1,55 +1,27 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company:
-// Engineer:
-//
-// Create Date: 12/11/2023 08:44:13 PM
-// Design Name:
-// Module Name: transactiontracing
-// Project Name:
-// Target Devices:
-// Tool Versions:
-// Description:
-//
-// Dependencies:
-//
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
-
-
-`timescale 1ns / 1ps
-
-module transactiontracing #(parameter n =1)(
+module transactiontracing (
 input  clk,
-input [9:0] time_stamp,
+input [30:0] time_stamp,
 input in,
 input [1:0]method_field,
-input [29:0]value,
+input [19:0]value,
 input new_wallet,
-output reg [6:0] confidence_score
+  output reg [6:0] confidence_score,
+  output reg [6:0] m, i, v, p
     );
    
    reg [6:0] moving_method;
    reg method_indicator;
-
- 
    reg [6:0] moving_in;
-
    reg [63:0] moving_avg_value;
-
    reg [9:0] start_time, end_time;
    reg [6:0] total_running_sum;
-
-
-   reg [6:0] m, i, v, p;
+   reg [6:0] inoutratio;
+   //reg [6:0] m, i, v, p;
 
 
 
    
-parameter standard_method = 2'b00, tether = 2'b01, monero = 2'b10, other_method = 2'b11;
+parameter  tether = 2'b00, monero = 2'b01, other_method = 2'b10;
 
 
 //initialize
@@ -80,7 +52,7 @@ end
 //in/out ratio
 always @(posedge clk) begin
     case (in)
-    0: begin
+    1: begin
         moving_in<=moving_in+1;
     end
     endcase
@@ -99,14 +71,18 @@ end
 always @(posedge clk) begin
     moving_avg_value <= moving_avg_value + value;
     end
-
-
-
+   
 
 //period and calculate confidence score
 always @(posedge clk) begin
-    if (new_wallet == 1)
-        begin
+  if (new_wallet == 0) begin
+    end_time <= time_stamp;
+    total_running_sum <= total_running_sum +1;
+  end
+end
+ 
+ 
+ always @(posedge clk) begin
         if(method_indicator == 1 || 100*(moving_method/total_running_sum) >= 15)
             m <= 15;
         else if (100*(moving_method/total_running_sum) >= 10)
@@ -115,11 +91,12 @@ always @(posedge clk) begin
             m <= 5;
         else
             m<=0;
+ end
        
-       
 
 
-
+//inout ratio
+  always @(posedge clk) begin
         if(100*(moving_in/total_running_sum) >= 95 || 100*(moving_in/total_running_sum) <= 5 )
             i <= 35;
         else if (100*(moving_in/total_running_sum) >= 90 || 100*(moving_in/total_running_sum) <= 10)
@@ -134,9 +111,12 @@ always @(posedge clk) begin
             i <= 10;
         else
             i<=0;
-       
+  end
 
 
+
+//value
+  always @(posedge clk) begin
         if(moving_avg_value/total_running_sum >= value_degree5)
             v <= 20;
         else if (moving_avg_value/total_running_sum >= value_degree4)
@@ -149,8 +129,10 @@ always @(posedge clk) begin
             v <= 7;
         else
             v <=0;
-       
+  end
 
+//frequency
+  always @(posedge clk) begin
         if((start_time-end_time)/total_running_sum >= 3600)
             p <= 30;
         else if ((start_time-end_time)/total_running_sum >= 1800)
@@ -163,25 +145,48 @@ always @(posedge clk) begin
             p <= 5;
         else
             p <=0;
-        end
-    else begin
-        end_time <= time_stamp;
-    end
-    total_running_sum <= total_running_sum +1;
-    end
-
-   always @(m)begin
+  end
+ 
+ 
+ 
+   always @(confidence_score)begin
+     if (new_wallet == 1) begin
      method_indicator <= 0;
+     moving_method <=0;
    end
-   always @(p)begin
+   end
+ 
+  always @(confidence_score)begin
+    if (new_wallet == 1) begin
+     moving_avg_value <=0;
+   end
+  end
+ 
+  always @(confidence_score)begin
+    if (new_wallet == 1) begin
+     moving_in <=0;
+   end
+  end
+ 
+   always @(confidence_score)begin
+     if (new_wallet == 1) begin
      start_time <=time_stamp;
+   end  
    end
-   always @(m, v, i , p) begin
+ 
+   always @(confidence_score)begin
+     if (new_wallet == 1) begin
+     total_running_sum<=0;
+   end
+   end
+       
+ 
+ 
+   always @(m, v, i , p)begin
     confidence_score <= m+i+v+p;
    end
-     
-       
-       
+ 
+           
        
 
 endmodule
