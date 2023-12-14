@@ -15,8 +15,7 @@ input new_wallet,
    reg [63:0] moving_avg_value;
    reg [9:0] start_time, end_time;
    reg [6:0] total_running_sum;
-   reg [6:0] inoutratio;
-   //reg [6:0] m, i, v, p;
+   reg [6:0] m, i, v, p;
 
 
 
@@ -149,32 +148,32 @@ end
  
  
  
-   always @(confidence_score)begin
+   always @(posedge clk)begin
      if (new_wallet == 1) begin
      method_indicator <= 0;
      moving_method <=0;
    end
    end
  
-  always @(confidence_score)begin
+  always @(posedge clk)begin
     if (new_wallet == 1) begin
      moving_avg_value <=0;
    end
   end
  
-  always @(confidence_score)begin
+  always @(posedge clk)begin
     if (new_wallet == 1) begin
      moving_in <=0;
    end
   end
  
-   always @(confidence_score)begin
+   always @(posedge clk)begin
      if (new_wallet == 1) begin
      start_time <=time_stamp;
    end  
    end
  
-   always @(confidence_score)begin
+   always @(posedge clk)begin
      if (new_wallet == 1) begin
      total_running_sum<=0;
    end
